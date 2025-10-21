@@ -1,492 +1,196 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>برنامه روزانه — تودو، نمودار و مدیریت داده</title>
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root{
-      --purple:#6d28d9;
-      --blue:#60a5fa;
-      --light-blue:#eef6ff;
-      --muted:#6b7280;
-    }
-    *{box-sizing:border-box;font-family:'Vazirmatn',sans-serif}
-    body{margin:0;padding:18px;background:#fff;color:#1f1f39}
-    .container{max-width:980px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;border:1px solid #f0f0f5;box-shadow:0 10px 30px rgba(100,100,200,0.06)}
-    h1{text-align:center;margin:0 0 12px;background:linear-gradient(90deg,#8b5cf6,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .top-row{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-    .cards{flex:1;min-width:280px}
-    .chart-card{background:#fbfdff;border-radius:10px;padding:12px;border:1px solid #eef6ff}
-    .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-    .tab{background:var(--light-blue);color:var(--purple);padding:6px 10px;border-radius:8px;cursor:pointer;border:1px solid #c7d2fe;user-select:none}
-    .tab.active{background:linear-gradient(90deg,#8b5cf6,#60a5fa);color:#fff}
-    .day{display:none;margin-top:12px}
-    .day.active{display:block}
-    .task{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:10px;background:#f9fbff;border:1px solid #eef6ff;margin:6px 0}
-    .task .left{display:flex;align-items:center;gap:12px;direction:rtl}
-    .task .time{font-weight:700;color:#0b3954;min-width:86px;text-align:left}
-    .task.done{background:#eafbf0;text-decoration:line-through;color:#555}
-    .controls{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
-    .btn{background:linear-gradient(90deg,#8b5cf6,#60a5fa);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
-    .btn.ghost{background:#fff;color:var(--purple);border:1px solid #e6e6ff}
-    .small{font-size:13px;color:var(--muted)}
-    .progress-wrap{margin-top:18px;padding:10px;border-radius:10px;background:#f8fbff;border:1px solid #eef6ff}
-    .progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-    .progress-bar{height:14px;background:#e6f2ff;border-radius:10px;overflow:hidden}
-    .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width 700ms ease}
-    .footer-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px;flex-wrap:wrap}
-    .clear-btn{background:#fff;border:1px solid #ffdddd;color:#b91c1c;padding:8px 12px;border-radius:8px;cursor:pointer}
-
-    /* نمودارها در پایین */
-    .chart-section {
-      width: 100%;
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .chart-card canvas {
-      width: 100% !important;
-      height: auto !important;
-      min-height: 180px;
-      max-height: 240px;
-    }
-
-    /* modal */
-    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center}
-    .modal-inner{background:linear-gradient(135deg,#8b5cf6,#60a5fa);color:#fff;padding:22px;border-radius:14px;max-width:420px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
-    .modal-inner h2{margin:0 0 8px}
-    .modal-inner p{margin:0 0 14px}
-    .modal .btn{background:#fff;color:var(--purple)}
-
-    /* responsive tweaks */
-    @media (max-width:900px){
-      .top-row{flex-direction:column}
-      .task .time{min-width:70px}
-    }
-    @media (max-width:600px){
-      .chart-card canvas {
-        min-height: 160px;
-      }
-      .chart-card .small {
-        font-size: 12px;
-      }
-    }
-    @media (max-width:520px){
-      body{padding:10px}
-      .task{padding:6px}
-      .task .time{display:block;width:100%;text-align:right}
-      .task .left{flex-direction:column;align-items:flex-end;gap:6px}
-      .tab{padding:6px 8px;font-size:13px}
-    }
-    @media (max-width:400px){
-      .chart-card canvas {
-        min-height: 140px;
-      }
-      .task .time{font-size:12px}
-      .desc{font-size:13px}
-    }
-    @media print{.modal{display:none}.btn,.clear-btn{display:none}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>برنامه روزانه — تودو، نمودار و مدیریت داده</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--purple:#6d28d9;--blue:#60a5fa;--light-blue:#eef6ff;--muted:#6b7280;}
+*{box-sizing:border-box;font-family:'Vazirmatn',sans-serif}
+body{margin:0;padding:18px;background:#fff;color:#1f1f39}
+.container{max-width:980px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;border:1px solid #f0f0f5;box-shadow:0 10px 30px rgba(100,100,200,0.06)}
+h1{text-align:center;margin:0 0 12px;background:linear-gradient(90deg,#8b5cf6,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.top-row{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}.cards{flex:1;min-width:280px}.chart-card{background:#fbfdff;border-radius:10px;padding:12px;border:1px solid #eef6ff}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.tab{background:var(--light-blue);color:var(--purple);padding:6px 10px;border-radius:8px;cursor:pointer;border:1px solid #c7d2fe;user-select:none}.tab.active{background:linear-gradient(90deg,#8b5cf6,#60a5fa);color:#fff}
+.day{display:none;margin-top:12px}.day.active{display:block}
+.task{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:10px;background:#f9fbff;border:1px solid #eef6ff;margin:6px 0}
+.task .left{display:flex;align-items:center;gap:12px;direction:rtl}.task .time{font-weight:700;color:#0b3954;min-width:86px;text-align:left}.task.done{background:#eafbf0;text-decoration:line-through;color:#555}
+.controls{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.btn{background:linear-gradient(90deg,#8b5cf6,#60a5fa);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}.btn.ghost{background:#fff;color:var(--purple);border:1px solid #e6e6ff}
+.small{font-size:13px;color:var(--muted)}
+.progress-wrap{margin-top:18px;padding:10px;border-radius:10px;background:#f8fbff;border:1px solid #eef6ff}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-bar{height:14px;background:#e6f2ff;border-radius:10px;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width 700ms ease}
+.footer-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px;flex-wrap:wrap}
+.clear-btn{background:#fff;border:1px solid #ffdddd;color:#b91c1c;padding:8px 12px;border-radius:8px;cursor:pointer}
+.chart-section {width:100%;margin-top:24px;display:flex;flex-direction:column;gap:16px}.chart-card canvas{width:100% !important;height:auto !important;min-height:180px;max-height:240px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center}.modal-inner{background:linear-gradient(135deg,#8b5cf6,#60a5fa);color:#fff;padding:22px;border-radius:14px;max-width:420px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
+.modal-inner h2{margin:0 0 8px}.modal-inner p{margin:0 0 14px}.modal .btn{background:#fff;color:var(--purple)}
+/* modal editor */
+#modal-editor{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center}
+#modal-editor .modal-content{background:#fff;padding:20px;border-radius:12px;max-width:500px;width:90%;max-height:80%;overflow:auto;color:#000}
+.task-edit{display:flex;gap:8px;align-items:center;margin-bottom:8px}.task-edit input{flex:1;padding:6px;border:1px solid #ccc;border-radius:6px}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>برنامه روزانه — تودو، نمودار میله‌ای/خطی و مدیریت</h1>
+<div class="container">
+<h1>برنامه روزانه — تودو، نمودار و مدیریت داده</h1>
+<div class="top-row">
+<div class="cards" style="width:100%">
+<div class="chart-card">
+<div class="tabs" id="tabs"></div>
+<div id="days"></div>
+<div class="controls">
 
-    <!-- بخش تسک‌ها (در بالا) -->
-    <div class="top-row">
-      <div class="cards" style="width:100%">
-        <div class="chart-card">
-          <div class="tabs" id="tabs"></div>
-          <div id="days"></div>
+<div style="flex:1"></div>
+<button class="btn ghost" id="reset-today-btn">ریست امروز</button>
+<button class="btn" id="clear-all-btn">پاک کردن کامل داده‌ها</button>
+<button class="btn" id="edit-tasks-btn">ویرایش تسک‌ها</button>
+<button class="btn ghost" id="export-btn">صادرات داده</button>
+</div>
+</div>
+</div>
+</div>
+<div class="chart-section">
+<div class="chart-card">
+<div class="small" style="margin-bottom:6px;font-weight:700">نمودار میله‌ای روزانه (٪ تکمیل)</div>
+<canvas id="barChart"></canvas>
+</div>
+<div class="chart-card">
+<div class="small" style="margin-bottom:6px;font-weight:700">نمودار خطی کل هفته (%)</div>
+<canvas id="lineChart"></canvas>
+</div>
+</div>
+<div class="progress-wrap" style="margin-top:16px">
+<div class="progress-header">
+<div class="progress-label">پیشرفت هفتگی: <span id="points">0</span> / 700 امتیاز</div>
+<div class="small" id="percent">0%</div>
+</div>
+<div class="progress-bar">
+<div class="progress-fill" id="progress-fill"></div>
+</div>
+</div>
+<div class="footer-row">
+<div class="small">هر تسک = 10 امتیاز. هفته کامل = 700 امتیاز.</div>
+</div>
+</div>
+<div id="modal" class="modal" onclick="closeModal()">
+<div class="modal-inner" onclick="event.stopPropagation()">
+<h2 id="modal-title">🎉</h2>
+<p id="modal-text"></p>
+<button class="btn" onclick="closeModal()">باشه</button>
+</div>
+</div>
+<div id="modal-editor" class="modal">
+<div class="modal-content">
+<h3>ویرایش تسک‌ها</h3>
+<div id="tasks-edit-list"></div>
+<div style="margin-top:10px;">
+<button id="add-edit-task" class="btn ghost">➕ افزودن تسک</button>
+<button id="save-edit-tasks" class="btn">ذخیره تغییرات</button>
+<button id="cancel-edit-tasks" class="btn ghost">انصراف</button>
+</div>
+</div>
+</div>
+<script>
+const dayNames = ['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه'];
+const daysCfg = [
+{name:'شنبه', school:true, end:'14:30'},
+{name:'یکشنبه', school:true, end:'14:30'},
+{name:'دوشنبه', school:true, end:'14:30'},
+{name:'سه‌شنبه', school:true, end:'13:00'},
+{name:'چهارشنبه', school:true, end:'13:00'},
+{name:'پنج‌شنبه', school:false},
+{name:'جمعه', school:false}
+];
 
-          <div class="controls">
-            <div class="small">امروز: <span id="today-name">—</span> &nbsp; | &nbsp; تاریخ: <span id="today-date">—</span></div>
-            <div style="flex:1"></div>
-            <button class="btn ghost" id="reset-today-btn" title="پاک کردن تیک‌های امروز (اختیاری)">ریست امروز</button>
-            <button class="btn" id="clear-all-btn" title="پاک کردن کامل همه‌ی داده‌ها">پاک کردن کامل داده‌ها</button>
-          </div>
-        </div>
-      </div>
-    </div>
+function tasksTemplate(day){
+return [
+{id:Date.now(),time:'06:00',text:'بیدار شدن و آماده شدن برای روز'},
+{id:Date.now()+1,time:'07:15',text:'رفتن به مدرسه'},
+...(day.school ? [{id:Date.now()+2,time:`08:00-${day.end}`,text:'مدرسه و کلاس‌ها'}] : [{id:Date.now()+2,time:'08:00-09:30',text:'مطالعه در منزل'}]),
+{id:Date.now()+3,time: day.school ? `${day.end}-15:30` : '09:30-10:00',text:'استراحت / ناهار / عصرانه'},
+{id:Date.now()+4,time:'15:30-17:00',text:'مرور دروس و انجام تکالیف'},
+{id:Date.now()+5,time:'17:00-18:00',text:'کدنویسی و تمرین الگوریتم'},
+{id:Date.now()+6,time:'18:00-18:30',text:'ورزش یا مدیتیشن'},
+{id:Date.now()+7,time:'18:30-19:30',text:'مطالعه آزاد یا المپیاد'},
+{id:Date.now()+8,time:'19:30-20:00',text:'شام و استراحت'},
+{id:Date.now()+9,time:'20:00-21:00',text:'مرور انگلیسی یا تست کوتاه'},
+{id:Date.now()+10,time:'21:00-21:30',text:'کتاب‌خوانی / نوشتن خاطرات'},
+{id:Date.now()+11,time:'22:00',text:'آماده شدن برای خواب'}
+];
+}
 
-    <!-- نمودارها در پایین -->
-    <div class="chart-section">
-      <div class="chart-card">
-        <div class="small" style="margin-bottom:6px;font-weight:700">نمودار میله‌ای روزانه (٪ تکمیل)</div>
-        <canvas id="barChart"></canvas>
-      </div>
+function getTasks(dayName){const saved=localStorage.getItem(`tasks-${dayName}`);if(saved)return JSON.parse(saved);const day=daysCfg.find(d=>d.name===dayName);return tasksTemplate(day);}
+function saveTasks(dayName,tasks){localStorage.setItem(`tasks-${dayName}`,JSON.stringify(tasks));}
 
-      <div class="chart-card">
-        <div class="small" style="margin-bottom:6px;font-weight:700">نمودار خطی کل هفته (%)</div>
-        <canvas id="lineChart"></canvas>
-      </div>
-    </div>
+function buildUI(){
+const tabsEl=document.getElementById('tabs');
+const daysEl=document.getElementById('days');
+tabsEl.innerHTML='';daysEl.innerHTML='';
+const tIndex = todayIndex();
+for(let i=0;i<daysCfg.length;i++){
+const day=daysCfg[i];
+const tab=document.createElement('div');tab.className='tab'+(i===tIndex?' active':'');tab.innerText=day.name;
+tab.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.day').forEach(d=>d.classList.remove('active'));tab.classList.add('active');document.getElementById(`day-${i}`).classList.add('active');});
+tabsEl.appendChild(tab);
+const dayWrap=document.createElement('div');dayWrap.className='day'+(i===tIndex?' active':'');dayWrap.id=`day-${i}`;
+const tasks=getTasks(day.name);
+tasks.forEach(t=>{
+const row=document.createElement('div');row.className='task';
+const key=`task-${day.name}-${t.id}`;
+const done=localStorage.getItem(key)==='1';
+if(done)row.classList.add('done');
+const left=document.createElement('div');left.className='left';
+const info=document.createElement('div');info.className='info';info.innerHTML=`<div class="time">${t.time}</div><div class="desc">${t.text}</div>`;
+const cb=document.createElement('input');cb.type='checkbox';cb.checked=done;cb.onchange=()=>{if(cb.checked){row.classList.add('done');localStorage.setItem(key,'1');}else{row.classList.remove('done');localStorage.removeItem(key);}updateCharts();};
+left.appendChild(info);row.appendChild(left);row.appendChild(cb);dayWrap.appendChild(row);
+});daysEl.appendChild(dayWrap);
+}
+initCharts();updateCharts();}
 
-    <div class="progress-wrap" style="margin-top:16px">
-      <div class="progress-header">
-        <div class="progress-label">پیشرفت هفتگی: <span id="points">0</span> / 700 امتیاز</div>
-        <div class="small" id="percent">0%</div>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
-    </div>
+function todayIndex(){const jsDay=new Date().getDay();return(jsDay+1)%7;}
+function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 
-    <div class="footer-row">
-      <div class="small">هر تسک = 10 امتیاز. هفته کامل = 700 امتیاز.</div>
-      <div><button id="export-btn" class="btn ghost">صادرات داده (کپی JSON)</button></div>
-    </div>
+// Modal editor
+const editModal=document.getElementById('modal-editor');
+document.getElementById('edit-tasks-btn').onclick=()=>{
+const active=document.querySelector('.tab.active');const dayName=active.innerText;
+const tasks=getTasks(dayName);const list=document.getElementById('tasks-edit-list');list.innerHTML='';
+tasks.forEach(t=>addTaskEditRow(t));editModal.style.display='flex';};
+function addTaskEditRow(task){const list=document.getElementById('tasks-edit-list');const row=document.createElement('div');row.className='task-edit';row.dataset.id=task.id;row.innerHTML=`<input type="time" value="${task.time}"><input type="text" value="${task.text}"><button class='btn ghost'>❌</button>`;row.querySelector('button').onclick=()=>row.remove();list.appendChild(row);}
+document.getElementById('add-edit-task').onclick=()=>addTaskEditRow({id:Date.now(),time:'',text:''});
+document.getElementById('cancel-edit-tasks').onclick=()=>editModal.style.display='none';
+document.getElementById('save-edit-tasks').onclick=()=>{
+const active=document.querySelector('.tab.active');const dayName=active.innerText;
+const rows=document.querySelectorAll('#tasks-edit-list .task-edit');const newTasks=[];
+rows.forEach(r=>{const id=parseInt(r.dataset.id);const time=r.querySelector('input[type="time"]').value;const text=r.querySelector('input[type="text"]').value;if(time&&text)newTasks.push({id,time,text});});
+saveTasks(dayName,newTasks);editModal.style.display='none';buildUI();};
 
-  </div>
+document.getElementById('reset-today-btn').onclick=()=>{
+const ti=todayIndex();const day=daysCfg[ti];const tasks=getTasks(day.name);
+tasks.forEach(t=>localStorage.removeItem(`task-${day.name}-${t.id}`));updateCharts();buildUI();};
+document.getElementById('clear-all-btn').onclick=()=>{if(confirm('پاک کردن همه داده‌ها؟')){localStorage.clear();buildUI();updateCharts();}};
+document.getElementById('export-btn').onclick=()=>{const data={};daysCfg.forEach(d=>data[d.name]=getTasks(d.name));navigator.clipboard.writeText(JSON.stringify(data,null,2));alert('داده‌ها کپی شدند.');};
 
-  <!-- modal -->
-  <div id="modal" class="modal" onclick="closeModal()">
-    <div class="modal-inner" onclick="event.stopPropagation()">
-      <h2 id="modal-title">🎉</h2>
-      <p id="modal-text"></p>
-      <button class="btn" onclick="closeModal()">باشه</button>
-    </div>
-  </div>
+// Charts
+let barChart=null,lineChart=null;
+function initCharts(){
+const barCtx=document.getElementById('barChart').getContext('2d');
+const lineCtx=document.getElementById('lineChart').getContext('2d');
+const options={responsive:true,scales:{y:{beginAtZero:true,max:100}},plugins:{legend:{display:false}}};
+barChart=new Chart(barCtx,{type:'bar',data:{labels:dayNames,datasets:[{label:'درصد تکمیل روز',data:Array(7).fill(0),backgroundColor:dayNames.map((_,i)=>`rgba(${96+i*6},${165-i*4},${250-i*8},0.9)`),borderRadius:6,borderSkipped:false} ]},options});
+lineChart=new Chart(lineCtx,{type:'line',data:{labels:dayNames,datasets:[{label:'پیشرفت هفتگی (%)',data:Array(7).fill(0),borderColor:'rgba(107,43,255,0.95)',backgroundColor:'rgba(96,165,250,0.18)',tension:0.35,fill:true,pointRadius:4,pointHoverRadius:6} ]},options});}
+function updateCharts(){
+let points=0;
+daysCfg.forEach((day,i)=>{getTasks(day.name).forEach(t=>{if(localStorage.getItem(`task-${day.name}-${t.id}`)==='1')points+=10;});});
+document.getElementById('points').innerText=points;const percent=Math.round(Math.min(100,(points/700)*100));document.getElementById('percent').innerText=percent+'%';document.getElementById('progress-fill').style.width=percent+'%';}
 
-  <script>
-  // --------------------
-  // کلیدهای localStorage مورد استفاده:
-  // - task-{DayName}-{idx}    => 'true' برای تسک تیک خورده
-  // - complete-{DayName}      => 'true' وقتی روز کامل شد (برای نمودار)
-  // - chart-daily-data        => JSON آرایه با 7 مقدار درصد روزها (شنبه..جمعه)
-  // - lastDate                => YYYY-MM-DD تاریخ ذخیره شده آخرین بازدید برای تشخیص روز جدید
-  // --------------------
-
-  const dayNames = ['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه'];
-  const daysCfg = [
-    {name:'شنبه', school:true, end:'14:30'},
-    {name:'یکشنبه', school:true, end:'14:30'},
-    {name:'دوشنبه', school:true, end:'14:30'},
-    {name:'سه‌شنبه', school:true, end:'13:00'},
-    {name:'چهارشنبه', school:true, end:'13:00'},
-    {name:'پنج‌شنبه', school:false},
-    {name:'جمعه', school:false}
-  ];
-
-  // قالب تسک‌ها (تابع) — هر روز یک آرایه از تسک‌ها
-  function tasksTemplate(day){
-    return [
-      {time:'06:00', text:'بیدار شدن و آماده شدن برای روز'},
-      {time:'07:15', text:'رفتن به مدرسه'},
-      ...(day.school ? [{time:`08:00-${day.end}`, text:'مدرسه و کلاس‌ها'}] : [{time:'08:00-09:30', text:'مطالعه در منزل'}]),
-      {time: day.school ? `${day.end}-15:30` : '09:30-10:00', text:'استراحت / ناهار / عصرانه'},
-      {time:'15:30-17:00', text:'مرور دروس و انجام تکالیف'},
-      {time:'17:00-18:00', text:'کدنویسی و تمرین الگوریتم'},
-      {time:'18:00-18:30', text:'ورزش یا مدیتیشن'},
-      {time:'18:30-19:30', text:'مطالعه آزاد یا المپیاد'},
-      {time:'19:30-20:00', text:'شام و استراحت'},
-      {time:'20:00-21:00', text:'مرور انگلیسی یا تست کوتاه'},
-      {time:'21:00-21:30', text:'کتاب‌خوانی / نوشتن خاطرات'},
-      {time:'22:00', text:'آماده شدن برای خواب'}
-    ];
-  }
-
-  // خواندن/نوشتن chart daily data
-  function readChartData(){
-    const raw = localStorage.getItem('chart-daily-data');
-    if(!raw) return Array(7).fill(0);
-    try{ const arr = JSON.parse(raw); if(Array.isArray(arr) && arr.length===7) return arr; }catch(e){}
-    return Array(7).fill(0);
-  }
-  function writeChartData(arr){ localStorage.setItem('chart-daily-data', JSON.stringify(arr)); }
-
-  // محاسبه تاریخ امروز به صورت YYYY-MM-DD
-  function todayKey(){
-    const d = new Date();
-    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${dd}`;
-  }
-
-  // محاسبه اندیس امروز به صورت شنبه=0...جمعه=6 (در مرورگر JS: Sun=0..Sat=6)
-  function todayIndex(){
-    const jsDay = new Date().getDay(); // Sun=0 .. Sat=6
-    return (jsDay + 1) % 7;
-  }
-
-  // اگر روز تغییر کرده باشد: ذخیره درصد روز قبل در chart-daily-data (اگر پر نشده) و پاک کردن تیک‌های آن روز
-  function handleDayBoundary(){
-    const last = localStorage.getItem('lastDate');
-    const today = todayKey();
-    if(last && last !== today){
-      const lastDate = new Date(last);
-      const lastJsDay = lastDate.getDay();
-      const lastIndex = (lastJsDay + 1) % 7;
-      const chart = readChartData();
-      if(chart[lastIndex] === 0){
-        const dayCfg = daysCfg[lastIndex];
-        const tasks = tasksTemplate(dayCfg);
-        const total = tasks.length;
-        let done = 0;
-        tasks.forEach((t, idx) => { if(localStorage.getItem(`${dayCfg.name}-${idx}`) === 'true') done++; });
-        const percent = Math.round((done / total) * 100);
-        chart[lastIndex] = percent;
-        writeChartData(chart);
-      }
-      const prevDayCfg = daysCfg[lastIndex];
-      const prevTasks = tasksTemplate(prevDayCfg);
-      prevTasks.forEach((t, idx) => localStorage.removeItem(`${prevDayCfg.name}-${idx}`));
-    }
-    localStorage.setItem('lastDate', today);
-  }
-
-  // ساخت UI تب‌ها و روزها
-  const tabsEl = document.getElementById('tabs');
-  const daysEl = document.getElementById('days');
-  const tIndex = todayIndex();
-  document.getElementById('today-name').innerText = dayNames[tIndex];
-  document.getElementById('today-date').innerText = (new Date()).toLocaleDateString();
-
-  function buildUI(){
-    tabsEl.innerHTML = ''; daysEl.innerHTML='';
-    const chartData = readChartData();
-
-    daysCfg.forEach((day, i) => {
-      const tab = document.createElement('div');
-      tab.className = 'tab' + (i===tIndex ? ' active' : '');
-      tab.innerText = day.name;
-      tabsEl.appendChild(tab);
-
-      const dayWrap = document.createElement('div');
-      dayWrap.className = 'day' + (i===tIndex ? ' active' : '');
-      const tasks = tasksTemplate(day);
-      tasks.forEach((task, idx) => {
-        const row = document.createElement('div');
-        row.className = 'task';
-        const key = `${day.name}-${idx}`;
-        const done = localStorage.getItem(key) === 'true';
-        if(done) row.classList.add('done');
-        const left = document.createElement('div'); left.className='left';
-        const info = document.createElement('div'); info.className='info';
-        info.innerHTML = `<div class="time">${task.time}</div><div class="desc">${task.text}</div>`;
-        const cb = document.createElement('input'); cb.type='checkbox'; cb.checked = !!done;
-        cb.onchange = () => {
-          if(cb.checked){ row.classList.add('done'); localStorage.setItem(key,'true'); }
-          else { row.classList.remove('done'); localStorage.removeItem(key); }
-          updateDayCompletion(day.name, i);
-          updateCharts();
-          checkAchievements();
-        };
-        left.appendChild(info);
-        row.appendChild(left);
-        row.appendChild(cb);
-        dayWrap.appendChild(row);
-      });
-
-      daysEl.appendChild(dayWrap);
-
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.day').forEach(d=>d.classList.remove('active'));
-        tab.classList.add('active'); dayWrap.classList.add('active');
-      });
-    });
-
-    initCharts();
-    updateCharts();
-  }
-
-  // update completion percent for a specific day index and persist into chart-daily-data
-  function updateDayCompletion(dayName, dayIndex){
-    const dayCfg = daysCfg[dayIndex];
-    const tasks = tasksTemplate(dayCfg);
-    const total = tasks.length;
-    let done = 0;
-    tasks.forEach((t, idx)=>{ if(localStorage.getItem(`${dayCfg.name}-${idx}`)==='true') done++; });
-    const percent = Math.round((done/total)*100);
-    const chart = readChartData();
-    chart[dayIndex] = percent;
-    writeChartData(chart);
-    if(percent === 100) localStorage.setItem(`complete-${dayCfg.name}`,'true');
-    else localStorage.removeItem(`complete-${dayCfg.name}`);
-  }
-
-  // --------------------------------------------------
-  // Charts (Chart.js): barChart (daily %) and lineChart (weekly)
-  // --------------------------------------------------
-  let barChart=null, lineChart=null;
-  function initCharts(){
-    const barCtx = document.getElementById('barChart').getContext('2d');
-    const lineCtx = document.getElementById('lineChart').getContext('2d');
-
-    const chartOptions = {
-      responsive: true,
-      aspectRatio: 2.5,
-      scales: {
-        y: { beginAtZero: true, max: 100, ticks: { stepSize: 20 } }
-      },
-      plugins: { legend: { display: false } }
-    };
-
-    barChart = new Chart(barCtx, {
-      type: 'bar',
-      data: {
-        labels: dayNames,
-        datasets: [{
-          label: 'درصد تکمیل روز',
-          data: readChartData(),
-          backgroundColor: dayNames.map((_,i) => `rgba(${96 + i*6}, ${165 - i*4}, ${250 - i*8}, 0.9)`),
-          borderRadius: 6,
-          borderSkipped: false
-        }]
-      },
-      options: {
-        ...chartOptions,
-        plugins: {
-          tooltip: { callbacks: { label: ctx => `${ctx.parsed.y}%` } }
-        },
-        indexAxis: 'x',
-        barPercentage: 0.8,
-        categoryPercentage: 0.9
-      }
-    });
-
-    lineChart = new Chart(lineCtx, {
-      type: 'line',
-      data: {
-        labels: dayNames,
-        datasets: [{
-          label: 'پیشرفت هفتگی (%)',
-          data: readChartData(),
-          borderColor: 'rgba(107,43,255,0.95)',
-          backgroundColor: 'rgba(96,165,250,0.18)',
-          tension: 0.35,
-          fill: true,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }]
-      },
-      options: {
-        ...chartOptions,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, max: 100 },
-          x: {
-            ticks: {
-              autoSkip: false,
-              maxRotation: 0,
-              minRotation: 0,
-              font: { size: window.innerWidth < 500 ? 11 : 12 }
-            }
-          }
-        }
-      }
-    });
-  }
-
-  function updateCharts(){
-    const data = readChartData();
-    if(barChart){
-      barChart.data.datasets[0].data = data;
-      barChart.update();
-    }
-    if(lineChart){
-      lineChart.data.datasets[0].data = data;
-      lineChart.update();
-    }
-    let points = 0;
-    daysCfg.forEach((day, i) => {
-      const tasks = tasksTemplate(day);
-      tasks.forEach((t, idx) => { if(localStorage.getItem(`${day.name}-${idx}`) === 'true') points += 10; });
-    });
-    const max = 700;
-    const percent = Math.round(Math.min(100, (points/max)*100));
-    document.getElementById('points').innerText = points;
-    document.getElementById('percent').innerText = percent + '%';
-    document.getElementById('progress-fill').style.width = percent + '%';
-  }
-
-  // Achievements
-  function checkAchievements(){
-    const ti = todayIndex();
-    const chart = readChartData();
-    if(chart[ti] === 100 && !localStorage.getItem(`modal-daily-${dayNames[ti]}`)){
-      localStorage.setItem(`modal-daily-${dayNames[ti]}`,'shown');
-      openModal('daily');
-    }
-    for(let s=0;s<=4;s++){
-      const chart = readChartData();
-      if(chart[s]===100 && chart[s+1]===100 && chart[s+2]===100 && !localStorage.getItem(`3day-awarded-${s}`)){
-        localStorage.setItem(`3day-awarded-${s}`,'true');
-        openModal('3day');
-      }
-    }
-    const chartAll = readChartData();
-    if(chartAll.every(v=>v===100) && !localStorage.getItem('weekly-awarded')){
-      localStorage.setItem('weekly-awarded','true');
-      openModal('weekly');
-    }
-  }
-
-  function openModal(type){
-    const modal = document.getElementById('modal');
-    const t = document.getElementById('modal-title');
-    const txt = document.getElementById('modal-text');
-    if(type==='daily'){ t.innerText='🎉 تبریک روزانه!'; txt.innerHTML='تمام تسک‌های امروز را انجام دادی.<br>پاداش: ۱۰ دقیقه فیلم انگیزشی.'; }
-    else if(type==='3day'){ t.innerText='🌟 سه روز عالی!'; txt.innerHTML='سه روز پیاپی همه را انجام دادی — تشویق: "تشویق"'; }
-    else if(type==='weekly'){ t.innerText='🏆 هفته طلایی!'; txt.innerHTML='کل هفته را کامل کردی — تشویق بزرگ: "تشویق"'; }
-    modal.style.display='flex';
-  }
-  function closeModal(){ document.getElementById('modal').style.display='none'; }
-
-  // reset today
-  document.getElementById('reset-today-btn').addEventListener('click', ()=>{
-    if(!confirm('ریست تیک‌های امروز انجام شود؟ (نمودارها و آمار حفظ می‌شوند)')) return;
-    const ti = todayIndex();
-    const dayCfg = daysCfg[ti];
-    tasksTemplate(dayCfg).forEach((t,idx)=> localStorage.removeItem(`${dayCfg.name}-${idx}`));
-    const chart = readChartData(); chart[ti]=0; writeChartData(chart);
-    updateCharts();
-    buildUI();
-  });
-
-  // clear all data
-  document.getElementById('clear-all-btn').addEventListener('click', ()=>{
-    if(!confirm('آیا مطمئنی که می‌خواهی همهٔ داده‌ها (تسک‌ها و نمودارها) پاک شوند؟ این عمل غیرقابل بازگشت است.')) return;
-    Object.keys(localStorage).forEach(k=>{
-      if(k.startsWith('chart-daily-data') || k.startsWith('complete-') || k.startsWith('modal-') || k.startsWith('3day-') || k.startsWith('weekly-') || k.includes('-') ){
-        localStorage.removeItem(k);
-      }
-    });
-    localStorage.removeItem('chart-daily-data');
-    localStorage.removeItem('lastDate');
-    buildUI();
-    updateCharts();
-    alert('داده‌ها پاک شدند.');
-  });
-
-  // export data
-  document.getElementById('export-btn').addEventListener('click', ()=>{
-    const data = {};
-    Object.keys(localStorage).forEach(k=> data[k]=localStorage.getItem(k));
-    const s = JSON.stringify(data, null, 2);
-    navigator.clipboard?.writeText(s).then(()=> alert('داده‌ها در کلیپ‌بورد کپی شد (فرمت JSON).'), ()=> alert('کپی نشد — مرورگرت پشتیبانی نکرد.'));
-  });
-
-  // init
-  handleDayBoundary();
-  buildUI();
-  updateCharts();
-  checkAchievements();
-
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState === 'visible'){
-      handleDayBoundary();
-      buildUI();
-      updateCharts();
-      checkAchievements();
-    }
-  });
-  </script>
+// Init
+buildUI();initCharts();updateCharts();
+</script>
 </body>
 </html>

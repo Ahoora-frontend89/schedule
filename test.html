@@ -124,73 +124,190 @@ return [
 ];
 }
 
-function getTasks(dayName){const saved=localStorage.getItem(`tasks-${dayName}`);if(saved)return JSON.parse(saved);const day=daysCfg.find(d=>d.name===dayName);return tasksTemplate(day);}
-function saveTasks(dayName,tasks){localStorage.setItem(`tasks-${dayName}`,JSON.stringify(tasks));}
+function getTasks(dayName){
+  const saved = localStorage.getItem(`tasks-${dayName}`);
+  if (saved) return JSON.parse(saved);
+  const day = daysCfg.find(d=>d.name===dayName);
+  return tasksTemplate(day);
+}
+function saveTasks(dayName,tasks){
+  localStorage.setItem(`tasks-${dayName}`,JSON.stringify(tasks));
+}
 
 function buildUI(){
-const tabsEl=document.getElementById('tabs');
-const daysEl=document.getElementById('days');
-tabsEl.innerHTML='';daysEl.innerHTML='';
-const tIndex = todayIndex();
-for(let i=0;i<daysCfg.length;i++){
-const day=daysCfg[i];
-const tab=document.createElement('div');tab.className='tab'+(i===tIndex?' active':'');tab.innerText=day.name;
-tab.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.day').forEach(d=>d.classList.remove('active'));tab.classList.add('active');document.getElementById(`day-${i}`).classList.add('active');});
-tabsEl.appendChild(tab);
-const dayWrap=document.createElement('div');dayWrap.className='day'+(i===tIndex?' active':'');dayWrap.id=`day-${i}`;
-const tasks=getTasks(day.name);
-tasks.forEach(t=>{
-const row=document.createElement('div');row.className='task';
-const key=`task-${day.name}-${t.id}`;
-const done=localStorage.getItem(key)==='1';
-if(done)row.classList.add('done');
-const left=document.createElement('div');left.className='left';
-const info=document.createElement('div');info.className='info';info.innerHTML=`<div class="time">${t.time}</div><div class="desc">${t.text}</div>`;
-const cb=document.createElement('input');cb.type='checkbox';cb.checked=done;cb.onchange=()=>{if(cb.checked){row.classList.add('done');localStorage.setItem(key,'1');}else{row.classList.remove('done');localStorage.removeItem(key);}updateCharts();};
-left.appendChild(info);row.appendChild(left);row.appendChild(cb);dayWrap.appendChild(row);
-});daysEl.appendChild(dayWrap);
+  const tabsEl=document.getElementById('tabs');
+  const daysEl=document.getElementById('days');
+  tabsEl.innerHTML='';
+  daysEl.innerHTML='';
+  const tIndex = todayIndex();
+
+  for(let i=0;i<daysCfg.length;i++){
+    const day=daysCfg[i];
+    const tab=document.createElement('div');
+    tab.className='tab'+(i===tIndex?' active':'');
+    tab.innerText=day.name;
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.day').forEach(d=>d.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`day-${i}`).classList.add('active');
+    });
+    tabsEl.appendChild(tab);
+
+    const dayWrap=document.createElement('div');
+    dayWrap.className='day'+(i===tIndex?' active':'');
+    dayWrap.id=`day-${i}`;
+
+    const tasks=getTasks(day.name);
+    tasks.forEach(t=>{
+      const row=document.createElement('div');
+      row.className='task';
+      const key=`task-${day.name}-${t.id}`;
+      const done=localStorage.getItem(key)==='1';
+      if(done)row.classList.add('done');
+
+      const left=document.createElement('div');
+      left.className='left';
+
+      const info=document.createElement('div');
+      info.className='info';
+      // ✅ زمان اختیاری
+      info.innerHTML=`
+        <div class="time">${t.time ? t.time : ''}</div>
+        <div class="desc">${t.text}</div>
+      `;
+
+      const cb=document.createElement('input');
+      cb.type='checkbox';
+      cb.checked=done;
+      cb.onchange=()=>{
+        if(cb.checked){
+          row.classList.add('done');
+          localStorage.setItem(key,'1');
+        }else{
+          row.classList.remove('done');
+          localStorage.removeItem(key);
+        }
+        updateCharts();
+      };
+
+      left.appendChild(info);
+      row.appendChild(left);
+      row.appendChild(cb);
+      dayWrap.appendChild(row);
+    });
+    daysEl.appendChild(dayWrap);
+  }
+
+  initCharts();
+  updateCharts();
 }
-initCharts();updateCharts();}
 
-function todayIndex(){const jsDay=new Date().getDay();return(jsDay+1)%7;}
-function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function todayIndex(){
+  const jsDay=new Date().getDay();
+  return (jsDay+1)%7;
+}
 
-// Modal editor
+// ------------------- Modal editor -------------------
 const editModal=document.getElementById('modal-editor');
 document.getElementById('edit-tasks-btn').onclick=()=>{
-const active=document.querySelector('.tab.active');const dayName=active.innerText;
-const tasks=getTasks(dayName);const list=document.getElementById('tasks-edit-list');list.innerHTML='';
-tasks.forEach(t=>addTaskEditRow(t));editModal.style.display='flex';};
-function addTaskEditRow(task){const list=document.getElementById('tasks-edit-list');const row=document.createElement('div');row.className='task-edit';row.dataset.id=task.id;row.innerHTML=`<input type="time" value="${task.time}"><input type="text" value="${task.text}"><button class='btn ghost'>❌</button>`;row.querySelector('button').onclick=()=>row.remove();list.appendChild(row);}
+  const active=document.querySelector('.tab.active');
+  const dayName=active.innerText;
+  const tasks=getTasks(dayName);
+  const list=document.getElementById('tasks-edit-list');
+  list.innerHTML='';
+  tasks.forEach(t=>addTaskEditRow(t));
+  editModal.style.display='flex';
+};
+
+function addTaskEditRow(task){
+  const list=document.getElementById('tasks-edit-list');
+  const row=document.createElement('div');
+  row.className='task-edit';
+  row.dataset.id=task.id;
+  // ✅ ورودی زمان می‌تواند خالی باشد
+  row.innerHTML=`
+    <input type="time" value="${task.time || ''}">
+    <input type="text" value="${task.text}">
+    <button class='btn ghost'>❌</button>
+  `;
+  row.querySelector('button').onclick=()=>row.remove();
+  list.appendChild(row);
+}
+
 document.getElementById('add-edit-task').onclick=()=>addTaskEditRow({id:Date.now(),time:'',text:''});
 document.getElementById('cancel-edit-tasks').onclick=()=>editModal.style.display='none';
+
 document.getElementById('save-edit-tasks').onclick=()=>{
-const active=document.querySelector('.tab.active');const dayName=active.innerText;
-const rows=document.querySelectorAll('#tasks-edit-list .task-edit');const newTasks=[];
-rows.forEach(r=>{const id=parseInt(r.dataset.id);const time=r.querySelector('input[type="time"]').value;const text=r.querySelector('input[type="text"]').value;if(time&&text)newTasks.push({id,time,text});});
-saveTasks(dayName,newTasks);editModal.style.display='none';buildUI();};
+  const active=document.querySelector('.tab.active');
+  const dayName=active.innerText;
+  const rows=document.querySelectorAll('#tasks-edit-list .task-edit');
+  const newTasks=[];
+  rows.forEach(r=>{
+    const id=parseInt(r.dataset.id);
+    const time=r.querySelector('input[type="time"]').value;
+    const text=r.querySelector('input[type="text"]').value;
+    // ✅ فقط متن الزامی است، زمان اختیاری
+    if(text.trim()) newTasks.push({id,time:time || '',text});
+  });
+  saveTasks(dayName,newTasks);
+  editModal.style.display='none';
+  buildUI();
+};
 
+// ------------------- کنترل‌ها -------------------
 document.getElementById('reset-today-btn').onclick=()=>{
-const ti=todayIndex();const day=daysCfg[ti];const tasks=getTasks(day.name);
-tasks.forEach(t=>localStorage.removeItem(`task-${day.name}-${t.id}`));updateCharts();buildUI();};
-document.getElementById('clear-all-btn').onclick=()=>{if(confirm('پاک کردن همه داده‌ها؟')){localStorage.clear();buildUI();updateCharts();}};
-document.getElementById('export-btn').onclick=()=>{const data={};daysCfg.forEach(d=>data[d.name]=getTasks(d.name));navigator.clipboard.writeText(JSON.stringify(data,null,2));alert('داده‌ها کپی شدند.');};
+  const ti=todayIndex();
+  const day=daysCfg[ti];
+  const tasks=getTasks(day.name);
+  tasks.forEach(t=>localStorage.removeItem(`task-${day.name}-${t.id}`));
+  updateCharts();
+  buildUI();
+};
 
-// Charts
+document.getElementById('clear-all-btn').onclick=()=>{
+  if(confirm('پاک کردن همه داده‌ها؟')){
+    localStorage.clear();
+    buildUI();
+    updateCharts();
+  }
+};
+
+document.getElementById('export-btn').onclick=()=>{
+  const data={};
+  daysCfg.forEach(d=>data[d.name]=getTasks(d.name));
+  navigator.clipboard.writeText(JSON.stringify(data,null,2));
+  alert('داده‌ها کپی شدند.');
+};
+
+// ------------------- نمودارها -------------------
 let barChart=null,lineChart=null;
 function initCharts(){
-const barCtx=document.getElementById('barChart').getContext('2d');
-const lineCtx=document.getElementById('lineChart').getContext('2d');
-const options={responsive:true,scales:{y:{beginAtZero:true,max:100}},plugins:{legend:{display:false}}};
-barChart=new Chart(barCtx,{type:'bar',data:{labels:dayNames,datasets:[{label:'درصد تکمیل روز',data:Array(7).fill(0),backgroundColor:dayNames.map((_,i)=>`rgba(${96+i*6},${165-i*4},${250-i*8},0.9)`),borderRadius:6,borderSkipped:false} ]},options});
-lineChart=new Chart(lineCtx,{type:'line',data:{labels:dayNames,datasets:[{label:'پیشرفت هفتگی (%)',data:Array(7).fill(0),borderColor:'rgba(107,43,255,0.95)',backgroundColor:'rgba(96,165,250,0.18)',tension:0.35,fill:true,pointRadius:4,pointHoverRadius:6} ]},options});}
-function updateCharts(){
-let points=0;
-daysCfg.forEach((day,i)=>{getTasks(day.name).forEach(t=>{if(localStorage.getItem(`task-${day.name}-${t.id}`)==='1')points+=10;});});
-document.getElementById('points').innerText=points;const percent=Math.round(Math.min(100,(points/700)*100));document.getElementById('percent').innerText=percent+'%';document.getElementById('progress-fill').style.width=percent+'%';}
+  const barCtx=document.getElementById('barChart').getContext('2d');
+  const lineCtx=document.getElementById('lineChart').getContext('2d');
+  const options={responsive:true,scales:{y:{beginAtZero:true,max:100}},plugins:{legend:{display:false}}};
+  barChart=new Chart(barCtx,{type:'bar',data:{labels:dayNames,datasets:[{label:'درصد تکمیل روز',data:Array(7).fill(0),backgroundColor:dayNames.map((_,i)=>`rgba(${96+i*6},${165-i*4},${250-i*8},0.9)`),borderRadius:6,borderSkipped:false}]},options});
+  lineChart=new Chart(lineCtx,{type:'line',data:{labels:dayNames,datasets:[{label:'پیشرفت هفتگی (%)',data:Array(7).fill(0),borderColor:'rgba(107,43,255,0.95)',backgroundColor:'rgba(96,165,250,0.18)',tension:0.35,fill:true,pointRadius:4,pointHoverRadius:6}]},options});
+}
 
-// Init
-buildUI();initCharts();updateCharts();
+function updateCharts(){
+  let points=0;
+  daysCfg.forEach((day,i)=>{
+    getTasks(day.name).forEach(t=>{
+      if(localStorage.getItem(`task-${day.name}-${t.id}`)==='1') points+=10;
+    });
+  });
+  document.getElementById('points').innerText=points;
+  const percent=Math.round(Math.min(100,(points/700)*100));
+  document.getElementById('percent').innerText=percent+'%';
+  document.getElementById('progress-fill').style.width=percent+'%';
+}
+
+// ------------------- Init -------------------
+buildUI();
+initCharts();
+updateCharts();
 </script>
+
 </body>
 </html>
